@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public class midterm {
     public static void main(String args[]) throws Exception {
         String website="https://aps2.missouriwestern.edu/schedule/default.asp?tck=201910";
-        getData(website,"CSMP","mat");
+        getData(website,"EFLJ","chi");
     }
 
 
@@ -53,8 +53,8 @@ public class midterm {
         int count=0,increase=0;
         for(Element row:rows){
             Elements cells=row.select("td").select("td");
-            PreparedStatement posted=con.prepareStatement("INSERT INTO classes(CRN,course,Sec,classtype,Title,Hrs,Days,Times,room ,instructor)" +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?)");
+            PreparedStatement posted=con.prepareStatement("INSERT INTO classes(department,CRN,course,title,courseurl,Sec,classtype,Hrs,Days,Times,room ,instructor,maxEntrollment,seatAvailable,note,coursemessage,beginDate,endDate,titlefee,feepercredit,term)" +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             switch(cells.size()){
 
                 case 10:
@@ -70,6 +70,7 @@ public class midterm {
                 boolean match = Pattern.matches(decimalPattern, fee[i]);
                 if(match==true){
                     sec.perCreditFee=Double.parseDouble(fee[i]);
+
                 }
             }
 
@@ -78,8 +79,9 @@ public class midterm {
             Document classDetail=Jsoup.connect("https://aps2.missouriwestern.edu/schedule/"+url).get();
             Elements ulists=classDetail.select("ul.details");
             Elements lists=ulists.select("li");
-            sec.beginDate=lists.get(5).text();
-            sec.endDate=lists.get(6).text();
+            sec.beginDate=lists.get(5).text().split(" ")[2];
+            sec.endDate=lists.get(6).text().split(" ")[2];
+
             for(Element cell:cells){
                 count++;}
                 sec.department=department;
@@ -94,16 +96,27 @@ public class midterm {
             sec.times=cells.get(7).text();
             sec.room=cells.get(8).text();
             sec.instructor=cells.get(9).text();
-                    posted.setString(1,sec.crn);
-                    posted.setString(2,sec.course);
-                    posted.setString(3,sec.section);
-                    posted.setString(4,sec.type);
-                    posted.setString(5,sec.title);
-                    posted.setString(6, String.valueOf(sec.creditHrs));
-                    posted.setString(7,sec.days);
-                    posted.setString(8,sec.times);
-                    posted.setString(9,sec.room);
-                    posted.setString(10,sec.instructor);
+            posted.setString(1,sec.department);
+                    posted.setString(14, String.valueOf(sec.seatAvailable));
+                    posted.setString(13, String.valueOf(sec.maxEnrollment));
+                    posted.setString(21,sec.term);
+                    posted.setString(19, String.valueOf(sec.perCreditFee));
+                    posted.setString(20, String.valueOf(sec.perCreditFee*sec.creditHrs));
+                    posted.setString(16,sec.courseMessage);
+                    posted.setString(15,sec.courseMessage);
+                    posted.setString(5,sec.courseUrl);
+                    posted.setString(17,sec.beginDate);
+                    posted.setString(18,sec.endDate);
+                    posted.setString(2,sec.crn);
+                    posted.setString(3,sec.course);
+                    posted.setString(6,sec.section);
+                    posted.setString(7,sec.type);
+                    posted.setString(4,sec.title);
+                    posted.setString(8, String.valueOf(sec.creditHrs));
+                    posted.setString(9,sec.days);
+                    posted.setString(10,sec.times);
+                    posted.setString(11,sec.room);
+                    posted.setString(12,sec.instructor);
                     posted.executeUpdate();
             increase++;
             break;
@@ -111,9 +124,9 @@ public class midterm {
                     sec.days=cells.get(1).text();
                     sec.times=cells.get(2).text();
                     sec.room=cells.get(3).text();
-                posted.setString(7,sec.days);
-                posted.setString(8,sec.times);
-                posted.setString(9,sec.room);
+                posted.setString(9,sec.days);
+                posted.setString(10,sec.times);
+                posted.setString(11,sec.room);
                 posted.executeUpdate();
                 posted.close();
                 sections.add(sec);
@@ -123,13 +136,10 @@ public class midterm {
                 System.exit(1);
         }
 
-
-
-
-        for (int i=0;i<sections.size();i++) {
-           //System.out.println(sections.get(i));
-
         }
+        for (int i=0;i<sections.size();i++) {
+            System.out.println(sections.get(i));
+
         }
         System.out.println("All inserts finished");
             con.close();
